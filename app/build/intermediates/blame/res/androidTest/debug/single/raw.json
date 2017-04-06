@@ -1,0 +1,14 @@
+[
+    {
+        "merged": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\raw\\error.wav",
+        "source": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\bundles\\debug\\res\\raw\\error.wav"
+    },
+    {
+        "merged": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\raw\\explore_end.ogg",
+        "source": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\bundles\\debug\\res\\raw\\explore_end.ogg"
+    },
+    {
+        "merged": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\raw\\explore_begin.ogg",
+        "source": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\bundles\\debug\\res\\raw\\explore_begin.ogg"
+    }
+]

@@ -1,0 +1,30 @@
+[
+    {
+        "merged": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable\\button_mic_recording_1.xml",
+        "source": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\bundles\\debug\\res\\drawable\\button_mic_recording_1.xml"
+    },
+    {
+        "merged": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable\\button_mic.xml",
+        "source": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\bundles\\debug\\res\\drawable\\button_mic.xml"
+    },
+    {
+        "merged": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable\\button_mic_recording_2.xml",
+        "source": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\bundles\\debug\\res\\drawable\\button_mic_recording_2.xml"
+    },
+    {
+        "merged": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable\\button_mic_transcribing.xml",
+        "source": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\bundles\\debug\\res\\drawable\\button_mic_transcribing.xml"
+    },
+    {
+        "merged": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable\\button_mic_recording_3.xml",
+        "source": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\bundles\\debug\\res\\drawable\\button_mic_recording_3.xml"
+    },
+    {
+        "merged": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable\\button_mic_recording_0.xml",
+        "source": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\bundles\\debug\\res\\drawable\\button_mic_recording_0.xml"
+    },
+    {
+        "merged": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable\\button_mic_waiting.xml",
+        "source": "D:\\Android\\AlexaAndroid-master\\YiFangAlexa\\app\\build\\intermediates\\bundles\\debug\\res\\drawable\\button_mic_waiting.xml"
+    }
+]
