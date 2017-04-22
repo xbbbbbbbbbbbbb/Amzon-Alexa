@@ -70,7 +70,7 @@ public abstract class SendEvent {
      * @throws AvsException if we can't parse the response body into an {@link AvsResponse} item
      * @throws RuntimeException
      */
-    protected AvsResponse completePost() throws IOException, AvsException, RuntimeException {
+    protected synchronized AvsResponse completePost() throws IOException, AvsException, RuntimeException {
         addFormDataParts(mBodyBuilder);
         mRequestBuilder.post(mBodyBuilder.build());
         return parseResponse();

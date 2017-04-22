@@ -191,7 +191,7 @@ public abstract class AbstractAudioRecorder implements AudioRecorder {
         int len = getLength() - startPos;
         byte[] bytes = new byte[len];
         System.arraycopy(mRecording, startPos, bytes, 0, len);
-		android.util.Log.d("xb","Copied from: " + startPos + ": " + bytes.length + " bytes");
+//		android.util.Log.d("xb","Copied from: " + startPos + ": " + bytes.length + " bytes");
         return bytes;
     }
 
@@ -217,8 +217,8 @@ public abstract class AbstractAudioRecorder implements AudioRecorder {
      */
     public boolean isPausing() {
         double pauseScore = getPauseScore();
-		android.util.Log.d("xb---","Pause score: " + pauseScore);
-        return pauseScore > 5;
+//		android.util.Log.d("xb---","Pause score: " + pauseScore);
+        return pauseScore > 15;
     }
 
 

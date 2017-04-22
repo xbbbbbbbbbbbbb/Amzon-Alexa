@@ -129,10 +129,10 @@ public class AuthorizationManager {
         public void onSuccess(Bundle response) {
             String authCode = response.getString(AuthzConstants.BUNDLE_KEY.AUTHORIZATION_CODE.val);
 
-            if(BuildConfig.DEBUG) {
+//            if(BuildConfig.DEBUG) {
                 Log.i(TAG, "Authorization successful");
                 Util.showAuthToast(mContext, "Authorization successful.");
-            }
+//            }
 
             TokenManager.getAccessToken(mContext, authCode, getCodeVerifier(), mAuthManager, new TokenManager.TokenResponseCallback() {
                 @Override

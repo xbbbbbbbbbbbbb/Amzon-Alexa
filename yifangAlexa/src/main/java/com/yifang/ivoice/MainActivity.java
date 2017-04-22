@@ -1,12 +1,19 @@
 package com.yifang.ivoice;
 
 import android.Manifest;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -36,8 +43,10 @@ import com.willblaschko.android.alexa.AlexaManager;
 import com.willblaschko.android.alexa.audioplayer.AlexaAudioPlayer;
 import com.willblaschko.android.alexa.callbacks.AsyncCallback;
 import com.willblaschko.android.alexa.callbacks.AuthorizationCallback;
+import com.willblaschko.android.alexa.connection.ClientUtil;
 import com.willblaschko.android.alexa.interfaces.AvsItem;
 import com.willblaschko.android.alexa.interfaces.AvsResponse;
+import com.willblaschko.android.alexa.interfaces.alerts.AvsSetAlertItem;
 import com.willblaschko.android.alexa.interfaces.audioplayer.AvsPlayAudioItem;
 import com.willblaschko.android.alexa.interfaces.audioplayer.AvsPlayContentItem;
 import com.willblaschko.android.alexa.interfaces.audioplayer.AvsPlayRemoteItem;
@@ -57,12 +66,16 @@ import com.willblaschko.android.alexa.interfaces.speechsynthesizer.AvsSpeakItem;
 import com.willblaschko.android.alexa.requestbody.DataRequestBody;
 import com.willblaschko.android.alexa.utility.Util;
 import com.willblaschko.android.recorderview.RecorderView;
+import com.yifang.ivoice.receiver.AlarmReceiver;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import ee.ioc.phon.android.speechutils.RawAudioRecorder;
@@ -72,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getName();
 
-    private static final String PRODUCT_ID = "avstablet";
+    public static final String PRODUCT_ID = "avstablet";
     private static final String PRODUCT_DSN = "12349587";
 	private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
 
@@ -90,6 +103,9 @@ public class MainActivity extends AppCompatActivity {
         audioPlayer = AlexaAudioPlayer.getInstance(this);
 		audioPlayer.addCallback(alexaAudioPlayerCallback);
 		alexaManager = AlexaManager.getInstance(MainActivity.this,PRODUCT_ID);
+//		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
+
         setContentView(R.layout.activity_main);
         initializeUI();
 		if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -113,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
 		@Override
 		public void playerProgress(AvsItem item, long offsetInMilliseconds, float percent) {
 			if(BuildConfig.DEBUG) {
-				//Log.i(TAG, "Player percent: " + percent);
+				Log.i(TAG, "Player percent: " + percent);
 			}
 			if(item instanceof AvsPlayContentItem || item == null){
 				return;
@@ -123,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
 					Log.i(TAG, "PlaybackStarted " + item.getToken() + " fired: " + percent);
 				}
 				playbackStartedFired = true;
-				sendPlaybackStartedEvent(item);
+
 			}
 			if(!almostDoneFired && percent > .8f){
 				if(BuildConfig.DEBUG) {
@@ -141,14 +157,24 @@ public class MainActivity extends AppCompatActivity {
 			almostDoneFired = false;
 			playbackStartedFired = false;
 			avsQueue.remove(completedItem);
-			checkQueue();
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					mInfo.setText("press button and speak");
+				}
+			});
+			Log.d(TAG,"Audio itemComplete");
+
 			if(completedItem instanceof AvsPlayContentItem || completedItem == null){
+				checkQueue();
 				return;
 			}
 			if(BuildConfig.DEBUG) {
 				Log.i(TAG, "Complete " + completedItem.getToken() + " fired");
 			}
+
 			sendPlaybackFinishedEvent(completedItem);
+			checkQueue();
 		}
 
 		@Override
@@ -158,6 +184,7 @@ public class MainActivity extends AppCompatActivity {
 
 		@Override
 		public void dataError(AvsItem item, Exception e) {
+			Log.d(TAG, "Audio err:"+e.toString());
 			e.printStackTrace();
 		}
 
@@ -182,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private void sendPlaybackNearlyFinishedEvent(AvsPlayAudioItem item, long offsetInMilliseconds){
 		if (item != null) {
-			alexaManager.sendPlaybackNearlyFinishedEvent(item, offsetInMilliseconds, requestCallback);
+			alexaManager.sendPlaybackNearlyFinishedEvent(item, offsetInMilliseconds, null);
 			Log.i(TAG, "Sending PlaybackNearlyFinishedEvent");
 		}
 	}
@@ -197,7 +224,11 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onSuccess() {
 //				alexaManager.sendTextRequest("How is the weather in London?",requestCallback);
-				recorderView.setVisibility(View.VISIBLE);
+				//open our downchannel
+				alexaManager.sendOpenDownchannelDirective(downchannelRequestCallback);
+				//		synchronize our device
+				//alexaManager.sendSynchronizeStateEvent(synchronizeStateRequestCallback);
+
 			}
 
 			@Override
@@ -229,6 +260,101 @@ public class MainActivity extends AppCompatActivity {
 //		startListening();
     }
 
+	private AsyncCallback<AvsResponse, Exception> synchronizeStateRequestCallback = new AsyncCallback<AvsResponse, Exception>() {
+		@Override
+		public void start() {
+
+		}
+
+		@Override
+		public void success(AvsResponse result) {
+
+		}
+
+		@Override
+		public void failure(Exception error) {
+
+		}
+
+		private boolean isSend = true;
+		@Override
+		public void complete() {
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					recorderView.setVisibility(View.VISIBLE);
+					if(isSend){
+						isSend = false;
+						alexaManager.sendTextRequest("inspire me",requestCallback);
+					}
+
+				}
+			});
+
+		}
+	};
+
+	private AsyncCallback<AvsResponse, Exception> downchannelRequestCallback = new AsyncCallback<AvsResponse, Exception>() {
+		@Override
+		public void start() {
+
+		}
+
+		@Override
+		public void success(AvsResponse result) {
+
+			Log.d(TAG,"downchannelRequestCallback success===");
+			channelSuccess(result);
+		}
+
+		@Override
+		public void failure(Exception error) {
+
+		}
+
+		@Override
+		public void complete() {
+			Log.d(TAG,"openDownchannel complete");
+			//		synchronize our device
+			if(recorderView.getVisibility() != View.VISIBLE){
+				alexaManager.sendSynchronizeStateEvent(synchronizeStateRequestCallback);
+			}
+
+		}
+	};
+
+	private void channelSuccess(AvsResponse result){
+		for (AvsItem avsItem : result){
+			if(avsItem instanceof AvsSetAlertItem){
+				String type = ((AvsSetAlertItem) avsItem).getType();
+				if("TIMER".equals(type)){
+					Intent intent = new Intent(MainActivity.this,YiFangTimerActivity.class);
+					intent.putExtra("time",((AvsSetAlertItem) avsItem).getScheduledTime());
+					intent.putExtra("token",avsItem.getToken());
+					startActivity(intent);
+				} else if("ALARM".equals(type)) {
+					Date date = null;
+					SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yy-MM-dd hh:mm:ss");
+					try {
+						date = simpleDateFormat.parse(((AvsSetAlertItem) avsItem).getScheduledTime().replace("T"," "));
+					} catch (ParseException e) {
+						e.printStackTrace();
+					}
+					Intent intent = new Intent(MainActivity.this, AlarmReceiver.class);
+					PendingIntent sender = PendingIntent.getBroadcast(
+						MainActivity.this, 0, intent, 0);
+					// Schedule the alarm!
+					if(date != null){
+						AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+						am.set(AlarmManager.RTC_WAKEUP, date.getTime(), sender);
+					}
+
+				}
+
+			}
+		}
+	}
+
     private AsyncCallback<AvsResponse, Exception> requestCallback = new AsyncCallback<AvsResponse, Exception>() {
         @Override
         public void start() {
@@ -244,6 +370,7 @@ public class MainActivity extends AppCompatActivity {
             handleResponse(result);
 			recorderView.setRmsdbLevel(1);
             Log.i(TAG, "Event Success");
+			releaseRecorder();
         }
 
         @Override
@@ -252,18 +379,29 @@ public class MainActivity extends AppCompatActivity {
 			recorderView.setRmsdbLevel(1);
             Log.i(TAG, "Event Error"+error.toString());
 			istalk = false;
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					mInfo.setText("press button and speak");
+				}
+			});
+			releaseRecorder();
         }
 
         @Override
         public void complete() {
+//			AssetFileDescriptor afd ;
+//			try {
+//				audioPlayer.release();
+//				afd = getAssets().openFd("1.mp3");
+//				audioPlayer.getMediaPlayer().setDataSource(afd.getFileDescriptor(),afd.getStartOffset(),afd.getLength());
+//				audioPlayer.getMediaPlayer().prepareAsync();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+			releaseRecorder();
 			recorderView.setRmsdbLevel(1);
             Log.i(TAG, "Event Complete");
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    //Log.i(TAG, "Total request time: "+totalTime+" miliseconds");
-                }
-            });
 			istalk = false;
         }
     };
@@ -292,8 +430,8 @@ public class MainActivity extends AppCompatActivity {
 						sink.write(recorder.consumeRecording());
 					}
 
-					Log.i(TAG, "Received audio");
-					Log.i(TAG, "RMSDB: " + rmsdb);
+//					Log.i(TAG, "Received audio");
+//					Log.i(TAG, "RMSDB: " + rmsdb);
 
 				}
 
@@ -310,6 +448,7 @@ public class MainActivity extends AppCompatActivity {
 	};
 
 	public void startListening() {
+		mInfo.setText("listening");
 		istalk = true;
 		if(recorder == null){
 			recorder = new RawAudioRecorder(AUDIO_RATE);
@@ -319,6 +458,12 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private void stopListening(){
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				mInfo.setText("wait");
+			}
+		});
 
 		if(recorder != null) {
 			recorder.stop();
@@ -342,7 +487,8 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onClick(View v) {
 
-				if(recorder == null ) {
+				if(recorder == null && !istalk) {
+					Log.d(TAG,"startListening");
 					startListening();
 				}else{
 					stopListening();
@@ -396,7 +542,6 @@ public class MainActivity extends AppCompatActivity {
      * the new items are added to the list, it should have no function here.
      */
     private void checkQueue() {
-
         //if we're out of things, hang up the phone and move on
         if (avsQueue.size() == 0) {
             new Handler(Looper.getMainLooper()).post(new Runnable() {
@@ -410,35 +555,33 @@ public class MainActivity extends AppCompatActivity {
 
         final AvsItem current = avsQueue.get(0);
 
-        Log.i(TAG, "Item type " + current.getClass().getName());
+        Log.i(TAG, "checkQueue Item type " + current.getClass().getName());
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				mInfo.setText("speaking");
+			}
+		});
 
         if (current instanceof AvsPlayRemoteItem) {
             //play a URL
-            if (!audioPlayer.isPlaying()) {
-                audioPlayer.playItem((AvsPlayRemoteItem) current);
+//            if (!audioPlayer.isPlaying()) {
+			sendPlaybackStartedEvent(current);
+			audioPlayer.playItem((AvsPlayRemoteItem) current);
 
-            }
+//            }
         } else if (current instanceof AvsPlayContentItem) {
             //play a URL
-            if (!audioPlayer.isPlaying()) {
-                audioPlayer.playItem((AvsPlayContentItem) current);
-            }
+//            if (!audioPlayer.isPlaying()) {
+			sendPlaybackStartedEvent(current);
+			audioPlayer.playItem((AvsPlayContentItem) current);
+//            }
         } else if (current instanceof AvsSpeakItem) {
             //play a sound file
-            if (!audioPlayer.isPlaying()) {
-//				Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-//
-//				intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, "en-US");
-//
-//				try {
-//					startActivityForResult(intent, 1);
-//				} catch ( Exception e) {
-//					Log.d(TAG," Your device doesn't support Speech to Text");
-//
-//				}
-//                audioPlayer.playItem((AvsSpeakItem) current);
-				audioPlayer.playItem((AvsSpeakItem) current);
-            }
+//            if (!audioPlayer.isPlaying()) {
+			sendPlaybackStartedEvent(current);
+			audioPlayer.playItem((AvsSpeakItem) current);
+//            }
 
         } else if (current instanceof AvsStopItem) {
             //stop our play
@@ -446,7 +589,7 @@ public class MainActivity extends AppCompatActivity {
             avsQueue.remove(current);
         } else if (current instanceof AvsReplaceAllItem) {
             //clear all items
-            //mAvsItemQueue.clear();
+//            mAvsItemQueue.clear();
             audioPlayer.stop();
             avsQueue.remove(current);
         } else if (current instanceof AvsReplaceEnqueuedItem) {
@@ -456,19 +599,21 @@ public class MainActivity extends AppCompatActivity {
         } else if (current instanceof AvsExpectSpeechItem) {
 
             //listen for user input
+//			startListening();
+//			alexaManager.sendTextRequest("one minute",requestCallback);
             audioPlayer.stop();
             avsQueue.clear();
         } else if (current instanceof AvsSetVolumeItem) {
             //set our volume
-           // setVolume(((AvsSetVolumeItem) current).getVolume());
+            setVolume(((AvsSetVolumeItem) current).getVolume());
             avsQueue.remove(current);
         } else if(current instanceof AvsAdjustVolumeItem){
             //adjust the volume
-          //  adjustVolume(((AvsAdjustVolumeItem) current).getAdjustment());
+            adjustVolume(((AvsAdjustVolumeItem) current).getAdjustment());
             avsQueue.remove(current);
         } else if(current instanceof AvsSetMuteItem){
             //mute/unmute the device
-           // setMute(((AvsSetMuteItem) current).isMute());
+            setMute(((AvsSetMuteItem) current).isMute());
             avsQueue.remove(current);
         }else if(current instanceof AvsMediaPlayCommandItem){
             //fake a hardware "play" press
@@ -504,38 +649,74 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            avsQueue.remove(current);
-            checkQueue();
+//            avsQueue.remove(current);
+//            checkQueue();
         }
     }
 
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		switch (requestCode) {
-			case 1: {
-				if (resultCode == RESULT_OK && null != data) {
-
-					ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-					Log.d(TAG,text.get(0));
-					mInfo.setText(text.get(0));
-				}
-				break;
-			}
-		}
+	private void adjustVolume(long adjust){
+		setVolume(adjust, true);
 	}
+	private void setVolume(long volume){
+		setVolume(volume, false);
+	}
+	private void setVolume(final long volume, final boolean adjust){
+		AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+		final int max = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+		long vol= am.getStreamVolume(AudioManager.STREAM_MUSIC);
+		if(adjust){
+			vol += volume * max / 100;
+		}else{
+			vol = volume * max / 100;
+		}
+		am.setStreamVolume(AudioManager.STREAM_MUSIC, (int) vol, AudioManager.FLAG_VIBRATE);
+
+		alexaManager.sendVolumeChangedEvent(volume, vol == 0,null);
+
+		Log.i(TAG, "Volume set to : " + vol +"/"+max+" ("+volume+")");
+
+		new Handler(Looper.getMainLooper()).post(new Runnable() {
+			@Override
+			public void run() {
+				if(adjust) {
+					Toast.makeText(MainActivity.this, "Volume adjusted.", Toast.LENGTH_SHORT).show();
+				}else{
+					Toast.makeText(MainActivity.this, "Volume set to: " + (volume / 10), Toast.LENGTH_SHORT).show();
+				}
+			}
+		});
+
+	}
+	private void setMute(final boolean isMute){
+		AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+		am.setStreamMute(AudioManager.STREAM_MUSIC, isMute);
+
+		alexaManager.sendMutedEvent(isMute, requestCallback);
+
+		Log.i(TAG, "Mute set to : "+isMute);
+
+		new Handler(Looper.getMainLooper()).post(new Runnable() {
+			@Override
+			public void run() {
+				Toast.makeText(MainActivity.this, "Volume " + (isMute ? "muted" : "unmuted"), Toast.LENGTH_SHORT).show();
+			}
+		});
+	}
+
 
 	@Override
 	protected void onStop() {
 		super.onStop();
-		if(recorder != null){
-			recorder.stop();
-			recorder.release();
-			recorder = null;
+		releaseRecorder();
+		if (alexaManager != null) {
+			alexaManager.cancelAudioRequest();
+
 		}
+		ClientUtil.getTLS12OkHttpClient().dispatcher().cancelAll();
 		if(audioPlayer != null){
 			audioPlayer.stop();
 		}
+
 	}
 
 	@Override
@@ -545,6 +726,16 @@ public class MainActivity extends AppCompatActivity {
 			//remove callback to avoid memory leaks
 			audioPlayer.removeCallback(alexaAudioPlayerCallback);
 			audioPlayer.release();
+		}
+
+	}
+
+	private  void releaseRecorder(){
+		if(recorder != null){
+			recorder.stop();
+			recorder.release();
+			recorder = null;
+			recorder = new RawAudioRecorder(AUDIO_RATE);
 		}
 	}
 }

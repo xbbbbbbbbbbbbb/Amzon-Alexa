@@ -88,6 +88,7 @@ public class TokenManager {
                 e.printStackTrace();
                 if(callback != null){
                     //bubble up error
+					Log.d(TAG,e.toString());
                     handler.post(new Runnable() {
                         @Override
                         public void run() {

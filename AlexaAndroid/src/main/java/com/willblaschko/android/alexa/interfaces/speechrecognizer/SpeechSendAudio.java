@@ -52,7 +52,7 @@ public class SpeechSendAudio extends SpeechSendEvent {
 
             if (response != null && response.isEmpty()) {
                 if (callback != null) {
-                    callback.failure(new AvsAudioException("Nothing came back"));
+                    callback.complete();
                 }
                 return;
             }

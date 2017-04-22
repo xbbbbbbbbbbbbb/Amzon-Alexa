@@ -218,37 +218,23 @@ public class AlexaManager {
                         @Override
                         public void onSuccess(final String token) {
                             //do this off the main thread
-                            new AsyncTask<Void, Void, Boolean>() {
-                                @Override
-                                protected Boolean doInBackground(Void... params) {
-                                    try {
-                                        //create a new OpenDownchannel object and send our request
-                                        if (openDownchannel != null) {
-                                            return openDownchannel.connect(token);
-                                        }
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                    return false;
-                                }
-                                @Override
-                                protected void onPostExecute(Boolean canceled) {
-                                    super.onPostExecute(canceled);
-                                    openDownchannel = null;
-                                    if (!canceled) {
-                                        try {
-                                            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    sendOpenDownchannelDirective(callback);
-                                                }
-                                            }, 5000);
-                                        }catch (RuntimeException e){
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                }
-                            }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+							new Thread(new Runnable() {
+								@Override
+								public void run() {
+									while (true){
+										try {
+											//create a new OpenDownchannel object and send our request
+											if (openDownchannel != null) {
+												Log.d(TAG,"openDownchannel====");
+												openDownchannel.connect(token);
+											}
+										} catch (IOException e) {
+											Log.d(TAG,"AlexaManager IOException" + e.toString());
+											e.printStackTrace();
+										}
+									}
+								}
+							}).start();
                         }
 
                         @Override
@@ -444,6 +430,38 @@ public class AlexaManager {
             }
         });
     }
+
+	public void sendSetAleterSuccess(String token){
+		sendEvent(Event.getSetAlertSucceededEvent(token),null);
+	}
+
+	public void sendSetAlertFailedEvent(String token){
+		sendEvent(Event.getSetAlertFailedEvent(token),null);
+	}
+
+	public void sendDeleteAlertSucceededEvent(String token){
+		sendEvent(Event.getDeleteAlertSucceededEvent(token),null);
+	}
+
+	public void sendDeleteAleterFaileEvent(String token){
+		sendEvent(Event.getDeleteAlertFailedEvent(token),null);
+	}
+
+	public void sendAlertStartedEvent(String token){
+		sendEvent(Event.getAlertStartedEvent(token),null);
+	}
+
+	public void sendAlertStoppedEvent(String token){
+		sendEvent(Event.getAlertStoppedEvent(token),null);
+	}
+
+	public void sendAlertEnteredForegroundEvent(String token){
+		sendEvent(Event.getAlertEnteredForegroundEvent(token),null);
+	}
+
+	public void sendAlertEnteredBackgroundEvent(String token){
+		sendEvent(Event.getAlertEnteredBackgroundEvent(token),null);
+	}
 
     /**
      * Paired with startRecording()--these need to be triggered manually or programmatically as a pair.
@@ -815,6 +833,7 @@ public class AlexaManager {
                             new AsyncTask<Void, Void, AvsResponse>() {
                                 @Override
                                 protected AvsResponse doInBackground(Void... params) {
+									Log.d(TAG,"GenericSendEvent");
                                     new GenericSendEvent(url, token, event, new AsyncEventHandler(AlexaManager.this, callback));
                                     return null;
                                 }

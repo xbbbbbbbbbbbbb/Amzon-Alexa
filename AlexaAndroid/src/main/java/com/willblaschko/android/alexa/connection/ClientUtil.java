@@ -32,14 +32,14 @@ import okhttp3.TlsVersion;
 public class ClientUtil {
 
 	private final static int CONNECT_TIMEOUT =60;
-	private final static int READ_TIMEOUT=100;
+	private final static int READ_TIMEOUT=60;
 	private final static int WRITE_TIMEOUT=60;
     private static OkHttpClient mClient;
 
     public static OkHttpClient getTLS12OkHttpClient(){
         if(mClient == null) {
             OkHttpClient.Builder client = new OkHttpClient.Builder()
-				.readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
+				.readTimeout(READ_TIMEOUT, TimeUnit.MINUTES)
 				.writeTimeout(WRITE_TIMEOUT,TimeUnit.SECONDS)
 				.connectTimeout(CONNECT_TIMEOUT,TimeUnit.SECONDS);
             if (Build.VERSION.SDK_INT >= 16 && Build.VERSION.SDK_INT < 22) {

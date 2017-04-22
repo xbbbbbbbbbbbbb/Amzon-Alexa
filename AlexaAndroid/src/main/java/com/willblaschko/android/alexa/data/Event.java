@@ -2,6 +2,8 @@ package com.willblaschko.android.alexa.data;
 
 import com.google.gson.Gson;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +24,7 @@ import java.util.UUID;
 public class Event {
 
     Header header;
-    Payload payload;
+    MainPayload payload;
 
     public Header getHeader() {
         return header;
@@ -32,11 +34,11 @@ public class Event {
         this.header = header;
     }
 
-    public Payload getPayload() {
+    public MainPayload getPayload() {
         return payload;
     }
 
-    public void setPayload(Payload payload) {
+    public void setPayload(MainPayload payload) {
         this.payload = payload;
     }
 
@@ -78,13 +80,34 @@ public class Event {
         }
     }
 
-    public static class Payload{
+	public static class MainPayload{
+
+	}
+
+	public static class AlertsPayload extends MainPayload{
+		List<Alerts> allAlerts;
+		List<Alerts> activeAlerts;
+
+		private void setAllALerts(List<Alerts> allAlerts){
+			this.allAlerts = allAlerts;
+		}
+
+		private void setActiveAlerts(List<Alerts> activeAlerts){
+			this.activeAlerts = activeAlerts;
+		}
+
+	}
+
+    public static class Payload extends MainPayload{
         String token;
         String profile;
         String format;
         boolean muted;
         long volume;
         long offsetInMilliseconds;
+		List<Alerts> allALerts;
+		List<Alerts> activeAlerts;
+		String playerActivity;
 
         public String getProfile() {
             return profile;
@@ -94,8 +117,28 @@ public class Event {
             return format;
         }
 
+		private void setAllALerts(List<Alerts> allALerts){
+			this.allALerts = allALerts;
+		}
+
+		private void setActiveAlerts(List<Alerts> activeAlerts){
+			this.activeAlerts = activeAlerts;
+		}
+
 
     }
+
+	public static class Alerts{
+		String token;
+		String type;
+		String scheduledTime;
+		Alerts(String token,String type,String scheduledTime){
+			this.token = token;
+			this.type = type;
+			this.scheduledTime = scheduledTime;
+		}
+
+	}
 
     public static class EventWrapper{
         Event event;
@@ -113,6 +156,11 @@ public class Event {
             return new Gson().toJson(this)+"\n";
         }
     }
+
+	public static class RecognizerPayload extends MainPayload{
+		String profile;
+		String format;
+	}
 
     public static class Builder{
         Event event = new Event();
@@ -194,6 +242,7 @@ public class Event {
             payload.offsetInMilliseconds = offsetInMilliseconds;
             return this;
         }
+
     }
 
     public static String getSpeechRecognizerEvent(){
@@ -289,8 +338,10 @@ public class Event {
         Builder builder = new Builder();
         builder.setHeaderNamespace("Alerts")
                 .setHeaderName(type)
-                .setHeaderMessageId(getUuid())
-                .setPayloadToken(token);
+                .setHeaderMessageId(getUuid());
+		SpeechPayload speechPayload = new SpeechPayload();
+		speechPayload.token = token;
+		builder.event.setPayload(speechPayload);
         return builder.toJson();
     }
 
@@ -298,17 +349,28 @@ public class Event {
         Builder builder = new Builder();
         builder.setHeaderNamespace("SpeechSynthesizer")
                 .setHeaderName("SpeechStarted")
-                .setHeaderMessageId(getUuid())
-                .setPayloadToken(token);
+                .setHeaderMessageId(getUuid());
+		SpeechPayload speechPayload = new SpeechPayload();
+		speechPayload.token = token;
+		builder.event.setPayload(speechPayload);
+		Log.d("getSpeechStartedEvent",builder.toJson());
         return builder.toJson();
     }
+
+	public static class SpeechPayload extends MainPayload{
+		String token;
+	}
 
     public static String getSpeechFinishedEvent(String token){
         Builder builder = new Builder();
         builder.setHeaderNamespace("SpeechSynthesizer")
                 .setHeaderName("SpeechFinished")
-                .setHeaderMessageId(getUuid())
-                .setPayloadToken(token);
+                .setHeaderMessageId(getUuid());
+		SpeechPayload speechPayload = new SpeechPayload();
+		speechPayload.token = token;
+		builder.event.setPayload(speechPayload);
+		Log.d("getSpeechFinishedEvent" +
+			  "",builder.toJson());
         return builder.toJson();
     }
 
@@ -326,17 +388,100 @@ public class Event {
         Builder builder = new Builder();
         builder.setHeaderNamespace("AudioPlayer")
                 .setHeaderName("PlaybackFinished")
-                .setHeaderMessageId(getUuid())
-                .setPayloadToken(token);
+                .setHeaderMessageId(getUuid());
+		SyncSpeechPayload speechPayload = new SyncSpeechPayload();
+		speechPayload.token = token;
+		speechPayload.offsetInMilliseconds = 0;
+		builder.event.setPayload(speechPayload);
         return builder.toJson();
     }
 
 
+	public static Event getSynchronizeAlertEvent(){
+		Event alertEvent = new Event();
+		Header header = new Header();
+		header.setNamespace("Alerts");
+		header.setName("AlertsState");
+		AlertsPayload payload = new AlertsPayload();
+		List<Alerts> allALerts = new ArrayList<>();
+		List<Alerts> activeAlerts = new ArrayList<>();
+		payload.setAllALerts(allALerts);
+		payload.setActiveAlerts(activeAlerts);
+		alertEvent.setHeader(header);
+		alertEvent.setPayload(payload);
+		return alertEvent;
+	}
+
+	public static class AudioPayload extends MainPayload{
+		String token;
+		String playerActivity;
+		long offsetInMilliseconds;
+	}
+
+	public static Event getSynchronizePlayEvent(){
+		Event palyEvent = new Event();
+		Header header = new Header();
+		AudioPayload payload = new AudioPayload();
+		header.setNamespace("AudioPlayer");
+		header.setName("PlaybackState");
+		payload.token = "";
+		payload.offsetInMilliseconds = 0;
+		payload.playerActivity = "IDLE";
+		palyEvent.setHeader(header);
+		palyEvent.setPayload(payload);
+		return palyEvent;
+	}
+
+	public static class VolumePayload extends MainPayload{
+		int volume;
+		boolean muted;
+	}
+
+	public static Event getSynchnizeVolum(){
+		Event volumEvent = new Event();
+		Header header = new Header();
+		VolumePayload payload = new VolumePayload();
+		header.setName("VolumeState");
+		header.setNamespace("Speaker");
+		payload.volume = 0;
+		payload.muted = false;
+		volumEvent.setPayload(payload);
+		volumEvent.setHeader(header);
+		return volumEvent;
+	}
+
+	public static class SyncSpeechPayload extends AudioPayload{
+
+
+	}
+
+	public static Event getSynchronizeSpeech(){
+		Event speechEvent = new Event();
+		Header header = new Header();
+		SyncSpeechPayload payload = new SyncSpeechPayload();
+		payload.token = "";
+		payload.offsetInMilliseconds = 0;
+		payload.playerActivity = "FINISHED";
+		header.setName("SpeechState");
+		header.setNamespace("SpeechSynthesizer");
+		speechEvent.setHeader(header);
+		speechEvent.setPayload(payload);
+		return speechEvent;
+	}
+
     public static String getSynchronizeStateEvent(){
+		List<Event> contexts = new ArrayList<>();
+		contexts.add(getSynchronizeAlertEvent());
+		contexts.add(getSynchronizePlayEvent());
+		contexts.add(getSynchnizeVolum());
+		contexts.add(getSynchronizeSpeech());
         Builder builder = new Builder();
         builder.setHeaderNamespace("System")
                 .setHeaderName("SynchronizeState")
+			   	.setContext(contexts)
                 .setHeaderMessageId(getUuid());
+		builder.event.setPayload(new RecognizerPayload());
+		Log.d("getSynchronize=",builder.toJson());
         return builder.toJson();
     }
 

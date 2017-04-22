@@ -94,7 +94,7 @@ public class AlexaAudioPlayer {
      * then create it and configure it to our needs
      * @return Android native MediaPlayer
      */
-    private MediaPlayer getMediaPlayer(){
+    public MediaPlayer getMediaPlayer(){
         if(mMediaPlayer == null){
             mMediaPlayer = new MediaPlayer();
             mMediaPlayer.setWakeMode(mContext, PowerManager.PARTIAL_WAKE_LOCK);
@@ -178,7 +178,7 @@ public class AlexaAudioPlayer {
         if(!TextUtils.isEmpty(mItem.getToken()) && mItem.getToken().contains("PausePrompt")){
             //a gross work around for a broke pause mp3 coming from Amazon, play the local mp3
             try {
-                AssetFileDescriptor afd = mContext.getAssets().openFd("shhh.mp3");
+                AssetFileDescriptor afd = mContext.getAssets().openFd("1.mp3");
                 getMediaPlayer().setDataSource(afd.getFileDescriptor(),afd.getStartOffset(),afd.getLength());
             } catch (IOException e) {
                 e.printStackTrace();
