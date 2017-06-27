@@ -57,7 +57,7 @@ public class SpeechSendText extends SpeechSendEvent {
 
 
         //call the parent class's prepareConnection() in order to prepare our URL POST
-        prepareConnection(url, accessToken);
+        prepareConnection(url, accessToken,context);
 
         //get our VoiceHelper and use an async callback to get the data and send it off to the AVS server via completePost()
         VoiceHelper voiceHelper = VoiceHelper.getInstance(context);
@@ -72,7 +72,8 @@ public class SpeechSendText extends SpeechSendEvent {
 					final AvsResponse response = completePost();
 					if (response != null && response.isEmpty()) {
 						if (callback != null) {
-							callback.failure(new AvsAudioException("Nothing came back"));
+							callback.complete();
+							//callback.failure(new AvsAudioException("Nothing came back"));
 						}
 						return;
 					}
@@ -80,7 +81,7 @@ public class SpeechSendText extends SpeechSendEvent {
 						if (response != null){
 							callback.success(response);
 						}
-						callback.complete();
+//						callback.complete();
 					}
                     Log.i(TAG, "Audio sent");
                     Log.i(TAG, "Audio creation process took: " + (System.currentTimeMillis() - start));

@@ -111,7 +111,7 @@ public class CountdownView extends View {
         mTimeBgSize = ta.getDimension(R.styleable.CountdownView_timeBgSize, 0);
 
         isTimeTextBold = ta.getBoolean(R.styleable.CountdownView_isTimeTextBold, false);
-        mTimeTextSize = ta.getDimension(R.styleable.CountdownView_timeTextSize, sp2px(12));
+        mTimeTextSize = ta.getDimension(R.styleable.CountdownView_timeTextSize, sp2px(20));
         mTimeTextColor = ta.getColor(R.styleable.CountdownView_timeTextColor, 0xFF000000);
         isHideTimeBackground = ta.getBoolean(R.styleable.CountdownView_isHideTimeBackground, true);
         isShowDay = ta.getBoolean(R.styleable.CountdownView_isShowDay, false);

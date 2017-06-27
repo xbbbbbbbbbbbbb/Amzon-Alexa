@@ -1,5 +1,6 @@
 package com.willblaschko.android.alexa.interfaces.system;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.willblaschko.android.alexa.callbacks.AsyncCallback;
@@ -51,7 +52,7 @@ public class OpenDownchannel extends SendEvent {
     public OpenDownchannel(final String url, final AsyncCallback<AvsResponse, Exception> callback) {
         this.callback = callback;
         this.url = url;
-        this.client = ClientUtil.getTLS12OkHttpClient();
+        this.client = ClientUtil.getDownChannelClient();
     }
 
     /**
@@ -129,7 +130,7 @@ public class OpenDownchannel extends SendEvent {
 
     @Override
     @NotNull
-    protected String getEvent() {
+    protected String getEvent(Context context) {
         return "";
     }
 }

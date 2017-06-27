@@ -262,8 +262,8 @@ public class AlexaManager {
      * See: {@link #sendEvent(String, AsyncCallback)}
      * @param callback state callback
      */
-    public void sendSynchronizeStateEvent(@Nullable final AsyncCallback<AvsResponse, Exception> callback){
-        sendEvent(Event.getSynchronizeStateEvent(), callback);
+    public void sendSynchronizeStateEvent(@Nullable final AsyncCallback<AvsResponse, Exception> callback,Context context){
+        sendEvent(Event.getSynchronizeStateEvent(context), callback);
     }
 
     public boolean hasOpenDownchannel() {
@@ -388,7 +388,7 @@ public class AlexaManager {
                                     //we are authenticated, let's record some audio!
                                     try {
                                         mIsRecording = true;
-                                        getSpeechSendVoice().startRecording(url, token, assetFile, callback);
+                                        getSpeechSendVoice().startRecording(url, token, assetFile, callback,mContext);
 
                                         if (callback != null) {
                                             callback.success(null);
@@ -662,7 +662,7 @@ public class AlexaManager {
                                 @Override
                                 protected AvsResponse doInBackground(Void... params) {
                                     try {
-                                        getSpeechSendAudio().sendAudio(url, token, requestBody, new AsyncEventHandler(AlexaManager.this, callback));
+                                        getSpeechSendAudio().sendAudio(url, token, requestBody, new AsyncEventHandler(AlexaManager.this, callback),mContext);
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                         //bubble up the error
@@ -834,7 +834,7 @@ public class AlexaManager {
                                 @Override
                                 protected AvsResponse doInBackground(Void... params) {
 									Log.d(TAG,"GenericSendEvent");
-                                    new GenericSendEvent(url, token, event, new AsyncEventHandler(AlexaManager.this, callback));
+                                    new GenericSendEvent(url, token, event, new AsyncEventHandler(AlexaManager.this, callback),mContext);
                                     return null;
                                 }
                                 @Override

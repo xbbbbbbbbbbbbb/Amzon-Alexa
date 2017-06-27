@@ -1,5 +1,7 @@
 package com.willblaschko.android.alexa.interfaces.speechrecognizer;
 
+import android.content.Context;
+
 import com.willblaschko.android.alexa.data.Event;
 import com.willblaschko.android.alexa.interfaces.SendEvent;
 
@@ -18,8 +20,8 @@ public abstract class SpeechSendEvent extends SendEvent {
 
     @NotNull
     @Override
-    protected String getEvent() {
-        return Event.getSpeechRecognizerEvent();
+    protected String getEvent(Context context) {
+        return Event.getSpeechRecognizerEvent(context);
     }
 
     @Override

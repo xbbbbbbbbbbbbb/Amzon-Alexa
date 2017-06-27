@@ -1,5 +1,6 @@
 package com.willblaschko.android.alexa.interfaces;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.willblaschko.android.alexa.callbacks.AsyncCallback;
@@ -18,14 +19,14 @@ public class GenericSendEvent extends SendEvent{
     String event;
 
     public GenericSendEvent(String url, String accessToken, String event,
-                            final AsyncCallback<AvsResponse, Exception> callback){
+							final AsyncCallback<AvsResponse, Exception> callback, Context context){
         this.event = event;
 
         if (callback != null){
             callback.start();
         }
         try {
-            prepareConnection(url, accessToken);
+            prepareConnection(url, accessToken,context);
             if (callback != null) {
                 callback.success(completePost());
                 callback.complete();
@@ -44,7 +45,7 @@ public class GenericSendEvent extends SendEvent{
 
     @NotNull
     @Override
-    public String getEvent() {
+    public String getEvent(Context context) {
         return event;
     }
 

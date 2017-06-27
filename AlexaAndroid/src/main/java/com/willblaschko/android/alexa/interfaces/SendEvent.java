@@ -1,5 +1,6 @@
 package com.willblaschko.android.alexa.interfaces;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.willblaschko.android.alexa.callbacks.AsyncCallback;
@@ -46,7 +47,7 @@ public abstract class SendEvent {
      * @param url the URL we're posting to, this is either the default {@link com.willblaschko.android.alexa.data.Directive} or {@link com.willblaschko.android.alexa.data.Event} URL
      * @param accessToken the access token of the user who has given consent to the app
      */
-    protected void prepareConnection(String url, String accessToken) {
+    protected void prepareConnection(String url, String accessToken,Context context) {
 
         //set the request URL
         mRequestBuilder.url(url);
@@ -56,7 +57,7 @@ public abstract class SendEvent {
 
         mBodyBuilder = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("metadata", "metadata", RequestBody.create(MediaType.parse("application/json; charset=UTF-8"), getEvent()));
+                .addFormDataPart("metadata", "metadata", RequestBody.create(MediaType.parse("application/json; charset=UTF-8"), getEvent(context)));
 
         //reset our output stream
         mOutputStream = new ByteArrayOutputStream();
@@ -147,6 +148,6 @@ public abstract class SendEvent {
      * @return the JSON representation of the {@link com.willblaschko.android.alexa.data.Event}
      */
     @NotNull
-    protected abstract String getEvent();
+    protected abstract String getEvent(Context context);
 
 }

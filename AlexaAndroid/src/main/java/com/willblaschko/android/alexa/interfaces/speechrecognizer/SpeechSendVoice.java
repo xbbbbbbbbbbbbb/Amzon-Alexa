@@ -1,5 +1,6 @@
 package com.willblaschko.android.alexa.interfaces.speechrecognizer;
 
+import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
@@ -57,7 +58,7 @@ public class SpeechSendVoice extends SpeechSendEvent {
      */
     @Deprecated
     public void startRecording(final String url, final String accessToken, @Nullable byte[] buffer,
-                               @Nullable final AsyncCallback<Void, Exception> callback) throws IOException {
+							   @Nullable final AsyncCallback<Void, Exception> callback, final Context context) throws IOException {
         synchronized(mLock) {
             mAudioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, AUDIO_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, BUFFER_SIZE);
         }
@@ -72,7 +73,7 @@ public class SpeechSendVoice extends SpeechSendEvent {
             @Override
             protected Void doInBackground(Void... params) {
                 synchronized(mLock) {
-                    prepareConnection(url, accessToken);
+                    prepareConnection(url, accessToken,context);
                 }
                 return null;
             }

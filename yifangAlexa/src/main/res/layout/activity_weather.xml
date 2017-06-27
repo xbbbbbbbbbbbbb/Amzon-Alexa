@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include layout="@layout/card_title" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/image_current_weather"
+            android:layout_width="0dp"
+            android:layout_weight="2"
+            android:scaleType="center"
+            android:layout_margin="8dp"
+            android:layout_height="200dp"
+            />
+        <TextView
+            android:id="@+id/tv_current_weather"
+            android:layout_width="0dp"
+            android:layout_weight="3"
+            android:layout_height="200dp"
+            android:textColor="@color/black"
+            android:textSize="60sp"
+            android:gravity="center"
+            />
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="100dp">
+                <ImageView
+                    android:id="@+id/image_high_weather"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitEnd"/>
+                <TextView
+                    android:id="@+id/tv_high_weather"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:textColor="@color/black"
+                    android:gravity="bottom"
+                    />
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="100dp">
+                <ImageView
+                    android:id="@+id/image_low_weather"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitStart"/>
+                <TextView
+                    android:id="@+id/tv_low_weather"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="top"
+                    />
+            </LinearLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <com.yifang.ivoice.view.WeatherView
+            android:id="@+id/weather1"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+        <com.yifang.ivoice.view.WeatherView
+            android:id="@+id/weather2"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+        <com.yifang.ivoice.view.WeatherView
+            android:id="@+id/weather3"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+        <com.yifang.ivoice.view.WeatherView
+            android:id="@+id/weather4"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+        <com.yifang.ivoice.view.WeatherView
+            android:id="@+id/weather5"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+
+</LinearLayout>
